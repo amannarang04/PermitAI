@@ -9,7 +9,8 @@ from app.schemas.application import (
     QueueHistorySchema
 )
 from app.schemas.queue import QueueAssignmentResponse, ReassignRequest
-from app.schemas.metrics import MetricsResponse, TodayMetrics, MonthMetrics, QueueStatusMetrics, OfficerProductivity
+from app.schemas.metrics import MetricsResponse, TodayMetrics, MonthMetrics, QueueStatusMetrics, OfficerProductivity, QueueDetail, BottleneckDetail, TrendResponse, TrendPoint
+from app.schemas.notification import InAppNotificationResponse, NotificationPreferencesUpdate
 
 __all__ = [
     "UserCreateRequest",
@@ -29,5 +30,12 @@ __all__ = [
     "TodayMetrics",
     "MonthMetrics",
     "QueueStatusMetrics",
-    "OfficerProductivity"
+    "OfficerProductivity",
+    "InAppNotificationResponse",
+    "NotificationPreferencesUpdate",
+    "QueueDetail",
+    "BottleneckDetail",
+    "TrendResponse",
+    "TrendPoint"
 ]
+

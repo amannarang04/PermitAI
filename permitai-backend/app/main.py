@@ -9,7 +9,8 @@ from app.api import (
     queues_router,
     metrics_router,
     admin_router,
-    health_router
+    health_router,
+    notifications_router
 )
 from app.middleware import ErrorHandlingMiddleware, LoggingMiddleware
 from app.database.db import Base, engine
@@ -54,6 +55,7 @@ app.include_router(applications_router)
 app.include_router(queues_router)
 app.include_router(metrics_router)
 app.include_router(admin_router)
+app.include_router(notifications_router)
 
 @app.on_event("startup")
 def seed_database():

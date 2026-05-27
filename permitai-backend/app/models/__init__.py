@@ -5,6 +5,7 @@ from app.models.validation_error import ValidationError, FraudIndicator
 from app.models.queue_assignment import QueueAssignment, QueueHistory
 from app.models.audit_log import AuditLog, ApiActivityLog
 from app.models.configuration import Configuration
+from app.models.notification import InAppNotification
 
 # This allows importing all models from app.models, and registers them with Base.metadata
 __all__ = [
@@ -19,5 +20,7 @@ __all__ = [
     "QueueHistory",
     "AuditLog",
     "ApiActivityLog",
-    "Configuration"
+    "Configuration",
+    "InAppNotification"
 ]
+

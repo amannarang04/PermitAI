@@ -29,3 +29,25 @@ class MetricsResponse(BaseModel):
     this_month: MonthMetrics
     queue_status: QueueStatusMetrics
     officer_productivity: List[OfficerProductivity]
+
+class QueueDetail(BaseModel):
+    queue_name: str
+    pending_count: int
+    oldest_task_days: float
+    average_wait_hours: float
+
+class BottleneckDetail(BaseModel):
+    queue_name: str
+    backlog_count: int
+    average_processing_time_hours: float
+    is_bottleneck: bool
+    severity: str  # 'low', 'medium', 'high', 'critical'
+
+class TrendPoint(BaseModel):
+    date: str  # YYYY-MM-DD
+    received: int
+    approved: int
+    rejected: int
+
+class TrendResponse(BaseModel):
+    trends: List[TrendPoint]

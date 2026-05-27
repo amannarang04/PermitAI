@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Index, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database.db import Base
@@ -19,9 +19,13 @@ class User(Base):
     department = Column(String(100), nullable=True)
     is_active = Column(Boolean, default=True)
     
+    # Defaults to {"email": true, "sms": true, "in_app": true}
+    notification_preferences = Column(JSON, nullable=True, default=lambda: {"email": True, "sms": True, "in_app": True})
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
+
 
     # Relationships
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")

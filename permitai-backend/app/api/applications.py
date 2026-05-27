@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
@@ -8,6 +9,7 @@ import os
 from app.database.session import get_db
 from app.services.auth import get_current_user, get_staff_user
 from app.services.storage import StorageService
+from app.services.pdf_service import PDFService
 from app.models.user import User
 from app.models.application import Application
 from app.models.audit_log import AuditLog
@@ -18,6 +20,7 @@ from app.tasks.extraction_tasks import extract_document_async
 from app.tasks.notification_tasks import send_approval_email, send_rejection_email, send_missing_documents_email
 from app.config import settings
 from app.constants.enums import ApplicationStatus
+
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 
@@ -344,6 +347,7 @@ async def approve_application(
 
     # Generate permit number
     permit_number = f"BP-{datetime.utcnow().strftime('%Y')}-{uuid.uuid4().hex[:8].upper()}"
+    application.permit_number = permit_number
 
     db.commit()
 
@@ -480,3 +484,60 @@ async def request_more_documents(
         "application_id": application.application_id,
         "status": application.status
     }
+
+@router.get("/{application_id}/download-permit")
+async def download_permit(
+    application_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Download approved building permit as PDF
+    """
+    # Get application
+    application = db.query(Application).filter(
+        Application.application_id == application_id
+    ).first()
+    
+    if not application:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found"
+        )
+    
+    # Check authorization (citizen can only download their own, staff can download any)
+    if current_user.role == "citizen" and application.citizen_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to download this permit"
+        )
+    
+    # Check if application is approved
+    if application.status != ApplicationStatus.APPROVED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Permit is not approved yet. Only approved permits can be downloaded."
+        )
+    
+    permit_num = application.permit_number or "BP-PENDING"
+    
+    # Generate permit certificate PDF
+    try:
+        pdf_data = PDFService.generate_permit_certificate(
+            application=application,
+            permit_number=permit_num
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating permit certificate: {str(e)}"
+        )
+    
+    # Return PDF as streaming response
+    return StreamingResponse(
+        iter([pdf_data]),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=permit_{application_id}.pdf"
+        }
+    )

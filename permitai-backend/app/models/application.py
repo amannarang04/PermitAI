@@ -91,6 +91,7 @@ class Application(Base):
     rejection_details = Column(JSON, nullable=True)
     
     approval_notes = Column(Text, nullable=True)
+    permit_number = Column(String(100), nullable=True, unique=True, index=True)
 
     # Aliasing approved_notes to approval_notes for compatibility
     @property
@@ -125,6 +126,7 @@ class Application(Base):
         Index("idx_assigned_to", "assigned_to_user_id"),
         Index("idx_created_at", "created_at"),
         Index("idx_city", "city"),
+        Index("idx_permit_number", "permit_number"),
     )
 
 
