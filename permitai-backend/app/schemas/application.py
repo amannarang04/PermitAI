@@ -258,3 +258,16 @@ class ApplicationDetailResponse(BaseModel):
         res["red_flags"] = fraud_inds
 
         return res
+
+class ApprovalRequest(BaseModel):
+    notes: Optional[str] = None
+    conditions: Optional[List[str]] = None
+
+class RejectionRequest(BaseModel):
+    reason: str
+    required_changes: Optional[List[str]] = None
+
+class DocumentRequest(BaseModel):
+    missing_documents: List[str]
+    deadline_days: Optional[int] = 7
+

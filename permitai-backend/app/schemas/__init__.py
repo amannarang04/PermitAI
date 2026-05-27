@@ -6,7 +6,10 @@ from app.schemas.application import (
     DocumentResponse,
     ValidationErrorSchema,
     FraudIndicatorSchema,
-    QueueHistorySchema
+    QueueHistorySchema,
+    ApprovalRequest,
+    RejectionRequest,
+    DocumentRequest
 )
 from app.schemas.queue import QueueAssignmentResponse, ReassignRequest
 from app.schemas.metrics import MetricsResponse, TodayMetrics, MonthMetrics, QueueStatusMetrics, OfficerProductivity, QueueDetail, BottleneckDetail, TrendResponse, TrendPoint
@@ -36,6 +39,9 @@ __all__ = [
     "QueueDetail",
     "BottleneckDetail",
     "TrendResponse",
-    "TrendPoint"
+    "TrendPoint",
+    "ApprovalRequest",
+    "RejectionRequest",
+    "DocumentRequest"
 ]
 

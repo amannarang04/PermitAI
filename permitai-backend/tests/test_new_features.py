@@ -149,3 +149,116 @@ def test_metrics_endpoints(client, db):
     res_tr = client.get("/api/admin/metrics/trends?days=7", headers=headers)
     assert res_tr.status_code == 200
     assert "trends" in res_tr.json()
+
+def test_officer_rejection_and_docs_endpoints(client, db):
+    # 1. Setup mock application
+    # Register and login citizen
+    client.post("/api/auth/register", json={
+        "username": "workflowcitizen",
+        "email": "workflowcitizen@example.com",
+        "password": "testpassword",
+        "full_name": "Workflow Citizen"
+    })
+    
+    res_login = client.post("/api/auth/login", data={
+        "username": "workflowcitizen",
+        "password": "testpassword"
+    })
+    citizen_token = res_login.json()["access_token"]
+    citizen_headers = {"Authorization": f"Bearer {citizen_token}"}
+    
+    citizen_user = db.query(User).filter(User.username == "workflowcitizen").first()
+    
+    app_record = Application(
+        application_id="PRM-2026-WORKFLOW",
+        citizen_id=citizen_user.id,
+        status=ApplicationStatus.UNDER_REVIEW,
+        permit_type="Building",
+        estimated_cost=1500000.0,
+        construction_area=500.0,
+        applicant_name="Workflow Citizen",
+        applicant_email="workflowcitizen@example.com"
+    )
+    db.add(app_record)
+    db.commit()
+    db.refresh(app_record)
+
+    # 2. Setup officer and login
+    officer = User(
+        username="workflowofficer",
+        email="workflowofficer@example.com",
+        password_hash=AuthService.hash_password("officerpassword"),
+        role=UserRole.OFFICER,
+        is_active=True
+    )
+    db.add(officer)
+    db.commit()
+    db.refresh(officer)
+
+    # Setup queue assignment
+    assignment = QueueAssignment(
+        application_id=app_record.id,
+        queue_name="building_engineer_review",
+        assigned_to_user_id=officer.id,
+        status=QueueAssignmentStatus.PENDING
+    )
+    db.add(assignment)
+    db.commit()
+
+    # Debug print
+    all_assignments = db.query(QueueAssignment).all()
+    print("ALL ASSIGNMENTS IN TEST:", all_assignments)
+    for a in all_assignments:
+        print(f"a.id={a.id}, a.assigned_to_user_id={a.assigned_to_user_id}, a.status={a.status}")
+
+    res_login_off = client.post("/api/auth/login", data={
+        "username": "workflowofficer",
+        "password": "officerpassword"
+    })
+    officer_token = res_login_off.json()["access_token"]
+    officer_headers = {"Authorization": f"Bearer {officer_token}"}
+
+    # 3. Test queue /my-queue endpoint
+    res_my_queue = client.get("/api/queues/my-queue", headers=officer_headers)
+    assert res_my_queue.status_code == 200
+    assert len(res_my_queue.json()) == 1
+    assert res_my_queue.json()[0]["queue_name"] == "building_engineer_review"
+
+    # 4. Test queues /details endpoint
+    res_details = client.get(f"/api/queues/{app_record.application_id}/details", headers=officer_headers)
+    assert res_details.status_code == 200
+    assert res_details.json()["application_id"] == app_record.application_id
+
+    # 5. Test request missing documents
+    res_req_docs = client.post(
+        f"/api/applications/{app_record.application_id}/request-documents",
+        json={"missing_documents": ["site_plan", "structural_drawings"], "deadline_days": 14},
+        headers=officer_headers
+    )
+    assert res_req_docs.status_code == 200
+    assert res_req_docs.json()["status"] == "pending_docs"
+    
+    # Verify in DB
+    db.refresh(app_record)
+    assert app_record.status == ApplicationStatus.PENDING_DOCS
+    assert app_record.rejection_details["missing_documents"] == ["site_plan", "structural_drawings"]
+    assert app_record.rejection_details["deadline_days"] == 14
+
+    # 6. Test reject endpoint
+    # Reset status first
+    app_record.status = ApplicationStatus.UNDER_REVIEW
+    db.commit()
+    
+    res_reject = client.post(
+        f"/api/applications/{app_record.application_id}/reject",
+        json={"reason": "Estimates too low", "required_changes": ["Raise construction area details"]},
+        headers=officer_headers
+    )
+    assert res_reject.status_code == 200
+    assert res_reject.json()["status"] == "rejected"
+    
+    db.refresh(app_record)
+    assert app_record.status == ApplicationStatus.REJECTED
+    assert app_record.rejected_reason == "Estimates too low"
+    assert app_record.rejection_details["required_changes"] == ["Raise construction area details"]
+

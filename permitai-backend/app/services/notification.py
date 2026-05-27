@@ -100,6 +100,120 @@ class NotificationService:
         return prefs
 
     @staticmethod
+    def _build_html_email(
+        greeting_name: str,
+        status_text: str,
+        message_body: str,
+        details: dict,
+        cta_text: str = None,
+        cta_url: str = None,
+        status_type: str = "info"  # info, success, warning, danger
+    ) -> str:
+        """
+        Builds a modern, professional, and responsive HTML email template using inline CSS.
+        """
+        color_map = {
+            "success": {
+                "bg": "#E8F5E9",
+                "text": "#2E7D32",
+                "border": "#A5D6A7"
+            },
+            "warning": {
+                "bg": "#FFF3E0",
+                "text": "#E65100",
+                "border": "#FFCC80"
+            },
+            "danger": {
+                "bg": "#FFEBEE",
+                "text": "#C62828",
+                "border": "#FFCDD2"
+            },
+            "info": {
+                "bg": "#E3F2FD",
+                "text": "#1565C0",
+                "border": "#90CAF9"
+            }
+        }
+        colors = color_map.get(status_type, color_map["info"])
+        
+        details_html = ""
+        if details:
+            details_html += """
+            <div style="background-color: #F8F9FA; border: 1px solid #E9ECEF; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px;">
+            """
+            for label, value in details.items():
+                details_html += f"""
+                    <tr>
+                        <td style="padding: 6px 0; color: #6C757D; font-weight: 500; width: 40%; vertical-align: top;">{label}</td>
+                        <td style="padding: 6px 0; color: #212529; font-weight: 600; vertical-align: top;">{value}</td>
+                    </tr>
+                """
+            details_html += """
+                </table>
+            </div>
+            """
+            
+        cta_html = ""
+        if cta_text and cta_url:
+            cta_html = f"""
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{cta_url}" style="background-color: #0A2540; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(10, 37, 64, 0.15); transition: background-color 0.2s ease;">
+                    {cta_text}
+                </a>
+            </div>
+            """
+            
+        html_template = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>{status_text}</title>
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #F4F6F9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-font-smoothing: antialiased;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; margin-top: 40px; margin-bottom: 40px; box-shadow: 0 8px 16px rgba(0,0,0,0.05); border: 1px solid #E9ECEF;">
+                <!-- Header -->
+                <tr>
+                    <td style="background-color: #0A2540; padding: 24px; text-align: center; border-bottom: 4px solid #F3A83B;">
+                        <span style="color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: 1px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                            Permit<span style="color: #F3A83B;">AI</span>
+                        </span>
+                        <div style="color: #A5B4FC; font-size: 11px; margin-top: 4px; font-weight: 500; letter-spacing: 0.5px;">BRUHAT BENGALURU MAHANAGARA PALIKE</div>
+                    </td>
+                </tr>
+                
+                <!-- Status Banner -->
+                <tr>
+                    <td style="padding: 20px 30px 0 30px;">
+                        <div style="background-color: {colors['bg']}; color: {colors['text']}; border: 1px solid {colors['border']}; border-radius: 8px; padding: 12px 16px; font-size: 14px; font-weight: 600; text-align: center; letter-spacing: 0.5px;">
+                            {status_text.upper()}
+                        </div>
+                    </td>
+                </tr>
+                
+                <!-- Content -->
+                <tr>
+                    <td style="padding: 30px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; line-height: 1.6; color: #495057;">
+                        <h4 style="margin-top: 0; color: #212529; font-size: 17px; font-weight: 600;">Dear {greeting_name},</h4>
+                        <p style="margin-bottom: 20px;">{message_body}</p>
+                        
+                        {details_html}
+                        
+                        {cta_html}
+                        
+                        <p style="margin-top: 25px; margin-bottom: 5px; color: #6C757D; font-size: 14px;">Best regards,</p>
+                        <p style="margin-top: 0; font-weight: 600; color: #0A2540; font-size: 14px;">PermitAI Team (BBMP)</p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        return html_template
+
+    @staticmethod
     def send_received_email(db: Session, app_id: int) -> bool:
         app = db.query(Application).filter(Application.id == app_id).first()
         if not app:
@@ -128,18 +242,22 @@ class NotificationService:
 
         # Email Notification
         if prefs.get("email", True):
-            html = f"""
-            <html>
-                <body>
-                    <h3>Dear {to_name},</h3>
-                    <p>We have successfully received your building permit application (ID: <strong>{app.application_id}</strong>) for <strong>{app.permit_type}</strong>.</p>
-                    <p>Our automated systems are currently validating the details. You can track your application status anytime on the PermitAI citizen portal.</p>
-                    <br/>
-                    <p>Best regards,</p>
-                    <p><strong>PermitAI Team</strong></p>
-                </body>
-            </html>
-            """
+            msg = f"We have successfully received your building permit application for {app.permit_type}. Our automated systems are currently validating the details. You can track your application status anytime on the PermitAI citizen portal."
+            details = {
+                "Application ID": app.application_id,
+                "Permit Type": app.permit_type,
+                "City": "Bangalore (BBMP)",
+                "Submitted At": app.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if app.submitted_at else "N/A"
+            }
+            html = NotificationService._build_html_email(
+                greeting_name=to_name,
+                status_text="Application Received",
+                message_body=msg,
+                details=details,
+                cta_text="Track Application",
+                cta_url=f"http://localhost:3000/track/{app.application_id}",
+                status_type="info"
+            )
             return NotificationService.send_email(to_email, subject, html)
         return True
 
@@ -172,19 +290,22 @@ class NotificationService:
 
         # Email Notification
         if prefs.get("email", True):
-            html = f"""
-            <html>
-                <body>
-                    <h3>Dear {to_name},</h3>
-                    <p>Congratulations! Your permit application (ID: <strong>{app.application_id}</strong>) has been <strong>APPROVED</strong>.</p>
-                    <p>Your official building permit number is: <strong>{permit_number}</strong>.</p>
-                    <p>You can now download the digital copy of your permit from your dashboard or pick up the physical copy from the department municipal office.</p>
-                    <br/>
-                    <p>Best regards,</p>
-                    <p><strong>PermitAI Team</strong></p>
-                </body>
-            </html>
-            """
+            msg = "Congratulations! Your permit application has been APPROVED. Your official building permit certificate is now available for download. You can download the digital copy from your dashboard or pick up the physical copy from the department municipal office."
+            details = {
+                "Application ID": app.application_id,
+                "Permit Number": permit_number,
+                "Permit Type": app.permit_type,
+                "Approval Date": app.decided_at.strftime("%Y-%m-%d") if app.decided_at else "N/A"
+            }
+            html = NotificationService._build_html_email(
+                greeting_name=to_name,
+                status_text="Permit Approved",
+                message_body=msg,
+                details=details,
+                cta_text="Download Permit PDF",
+                cta_url=f"http://localhost:8000/api/applications/{app.application_id}/download-permit",
+                status_type="success"
+            )
             return NotificationService.send_email(to_email, subject, html)
         return True
 
@@ -217,19 +338,22 @@ class NotificationService:
 
         # Email Notification
         if prefs.get("email", True):
-            html = f"""
-            <html>
-                <body>
-                    <h3>Dear {to_name},</h3>
-                    <p>We regret to inform you that your permit application (ID: <strong>{app.application_id}</strong>) has been <strong>REJECTED</strong>.</p>
-                    <p><strong>Reason for rejection:</strong><br/>{rejection_reason}</p>
-                    <p>You may log into the portal to review specific officer comments, upload corrected documents, and resubmit your application.</p>
-                    <br/>
-                    <p>Best regards,</p>
-                    <p><strong>PermitAI Team</strong></p>
-                </body>
-            </html>
-            """
+            msg = "We regret to inform you that your permit application has been REJECTED. Please review the reasons and required changes below. You may log into the portal to review specific officer comments, upload corrected documents, and resubmit."
+            details = {
+                "Application ID": app.application_id,
+                "Permit Type": app.permit_type,
+                "Rejection Reason": rejection_reason,
+                "Decision Date": app.decided_at.strftime("%Y-%m-%d") if app.decided_at else "N/A"
+            }
+            html = NotificationService._build_html_email(
+                greeting_name=to_name,
+                status_text="Application Rejected",
+                message_body=msg,
+                details=details,
+                cta_text="Review & Resubmit",
+                cta_url=f"http://localhost:3000/resubmit/{app.application_id}",
+                status_type="danger"
+            )
             return NotificationService.send_email(to_email, subject, html)
         return True
 
@@ -244,7 +368,6 @@ class NotificationService:
         to_email = app.applicant_email or (user.email if user else None) or "applicant@example.com"
         to_name = app.applicant_name or (user.full_name if user else None) or "Applicant"
         subject = f"Action Required: Missing Documents for Permit {app.application_id}"
-        docs_list = "".join([f"<li>{doc.replace('_', ' ').title()}</li>" for doc in missing_docs])
 
         # In-App Notification
         if prefs.get("in_app", True) and user:
@@ -263,21 +386,21 @@ class NotificationService:
 
         # Email Notification
         if prefs.get("email", True):
-            html = f"""
-            <html>
-                <body>
-                    <h3>Dear {to_name},</h3>
-                    <p>Your building permit application (ID: <strong>{app.application_id}</strong>) is currently on hold due to missing required documentation.</p>
-                    <p>Please log in and upload the following documents:</p>
-                    <ul>
-                        {docs_list}
-                    </ul>
-                    <p>Once the missing files are uploaded, automated verification will resume.</p>
-                    <br/>
-                    <p>Best regards,</p>
-                    <p><strong>PermitAI Team</strong></p>
-                </body>
-            </html>
-            """
+            msg = "Your building permit application is currently on hold due to missing required documentation. Please log in and upload the missing documents listed below. Once the files are uploaded, verification will resume."
+            details = {
+                "Application ID": app.application_id,
+                "Permit Type": app.permit_type,
+                "Missing Documents": ", ".join([doc.replace('_', ' ').title() for doc in missing_docs])
+            }
+            html = NotificationService._build_html_email(
+                greeting_name=to_name,
+                status_text="Action Required: Missing Documents",
+                message_body=msg,
+                details=details,
+                cta_text="Upload Documents",
+                cta_url=f"http://localhost:3000/resubmit/{app.application_id}",
+                status_type="warning"
+            )
             return NotificationService.send_email(to_email, subject, html)
         return True
+

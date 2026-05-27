@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://permitai_user:permitai_password@db:5432/permitai_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-mock}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-mock}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-mock}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-mock}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+      - local_storage:/app/local_storage
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  celery_worker:
+    build: .
+    environment:
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://permitai_user:permitai_password@db:5432/permitai_db
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-mock}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-mock}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-mock}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-mock}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+      - local_storage:/app/local_storage
+    command: celery -A app.tasks.celery_app.celery_app worker --loglevel=info
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=permitai_user
+      - POSTGRES_PASSWORD=permitai_password
+      - POSTGRES_DB=permitai_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  local_storage:

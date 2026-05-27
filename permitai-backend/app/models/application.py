@@ -91,6 +91,7 @@ class Application(Base):
     rejection_details = Column(JSON, nullable=True)
     
     approval_notes = Column(Text, nullable=True)
+    approval_conditions = Column(JSON, nullable=True)
     permit_number = Column(String(100), nullable=True, unique=True, index=True)
 
     # Aliasing approved_notes to approval_notes for compatibility

@@ -14,12 +14,15 @@ from app.models.user import User
 from app.models.application import Application
 from app.models.audit_log import AuditLog
 from app.schemas.application import (
-    ApplicationResponse, ApplicationDetailResponse, ApplicationListResponse
+    ApplicationResponse, ApplicationDetailResponse, ApplicationListResponse,
+    ApprovalRequest, RejectionRequest, DocumentRequest
 )
 from app.tasks.extraction_tasks import extract_document_async
 from app.tasks.notification_tasks import send_approval_email, send_rejection_email, send_missing_documents_email
 from app.config import settings
-from app.constants.enums import ApplicationStatus
+from app.constants.enums import ApplicationStatus, QueueAssignmentStatus
+from app.models.queue_assignment import QueueAssignment
+from app.services.routing import RoutingService
 
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
@@ -317,7 +320,7 @@ async def get_application_details(
 @router.post("/{application_id}/approve")
 async def approve_application(
     application_id: str,
-    notes: Optional[str] = None,
+    approval_data: ApprovalRequest,
     current_user: User = Depends(get_staff_user),
     db: Session = Depends(get_db)
 ):
@@ -343,11 +346,23 @@ async def approve_application(
     # Approve
     application.status = ApplicationStatus.APPROVED
     application.decided_at = datetime.utcnow()
-    application.approved_notes = notes
+    application.approved_notes = approval_data.notes
+    application.approval_conditions = approval_data.conditions
 
     # Generate permit number
     permit_number = f"BP-{datetime.utcnow().strftime('%Y')}-{uuid.uuid4().hex[:8].upper()}"
     application.permit_number = permit_number
+
+    # Clean up active queue assignments
+    active_assignments = db.query(QueueAssignment).filter(
+        QueueAssignment.application_id == application.id,
+        QueueAssignment.status.in_([QueueAssignmentStatus.PENDING, QueueAssignmentStatus.IN_PROGRESS])
+    ).all()
+    for assignment in active_assignments:
+        assignment.status = QueueAssignmentStatus.COMPLETED
+        assignment.completed_at = datetime.utcnow()
+        assignment.completed_by_user_id = current_user.id
+        assignment.actual_completion_time = datetime.utcnow()
 
     db.commit()
 
@@ -365,7 +380,11 @@ async def approve_application(
         user_id=current_user.id,
         action="approved",
         action_category="write",
-        details={"notes": notes, "permit_number": permit_number},
+        details={
+            "notes": approval_data.notes, 
+            "permit_number": permit_number,
+            "conditions": approval_data.conditions
+        },
         timestamp=datetime.utcnow()
     )
     db.add(log)
@@ -380,7 +399,7 @@ async def approve_application(
 @router.post("/{application_id}/reject")
 async def reject_application(
     application_id: str,
-    rejection_reason: str,
+    rejection_data: RejectionRequest,
     current_user: User = Depends(get_staff_user),
     db: Session = Depends(get_db)
 ):
@@ -406,17 +425,29 @@ async def reject_application(
     # Reject
     application.status = ApplicationStatus.REJECTED
     application.decided_at = datetime.utcnow()
-    application.rejected_reason = rejection_reason
+    application.rejected_reason = rejection_data.reason
+    application.rejection_details = {"required_changes": rejection_data.required_changes}
+
+    # Clean up active queue assignments
+    active_assignments = db.query(QueueAssignment).filter(
+        QueueAssignment.application_id == application.id,
+        QueueAssignment.status.in_([QueueAssignmentStatus.PENDING, QueueAssignmentStatus.IN_PROGRESS])
+    ).all()
+    for assignment in active_assignments:
+        assignment.status = QueueAssignmentStatus.COMPLETED
+        assignment.completed_at = datetime.utcnow()
+        assignment.completed_by_user_id = current_user.id
+        assignment.actual_completion_time = datetime.utcnow()
 
     db.commit()
 
     # Trigger notification
     try:
-        send_rejection_email.delay(application.id, rejection_reason)
+        send_rejection_email.delay(application.id, rejection_data.reason)
     except Exception:
         # Sync fallback
         from app.services.notification import NotificationService
-        NotificationService.send_rejection_email(db, application.id, rejection_reason)
+        NotificationService.send_rejection_email(db, application.id, rejection_data.reason)
 
     # Log action
     log = AuditLog(
@@ -424,7 +455,10 @@ async def reject_application(
         user_id=current_user.id,
         action="rejected",
         action_category="write",
-        details={"reason": rejection_reason},
+        details={
+            "reason": rejection_data.reason,
+            "required_changes": rejection_data.required_changes
+        },
         timestamp=datetime.utcnow()
     )
     db.add(log)
@@ -438,7 +472,7 @@ async def reject_application(
 @router.post("/{application_id}/request-documents")
 async def request_more_documents(
     application_id: str,
-    missing_documents: List[str],
+    request_data: DocumentRequest,
     current_user: User = Depends(get_staff_user),
     db: Session = Depends(get_db)
 ):
@@ -457,16 +491,34 @@ async def request_more_documents(
 
     # Update status
     application.status = ApplicationStatus.PENDING_DOCS
+    application.rejection_details = {
+        "missing_documents": request_data.missing_documents,
+        "deadline_days": request_data.deadline_days
+    }
+
+    # Clean up active queue assignments
+    active_assignments = db.query(QueueAssignment).filter(
+        QueueAssignment.application_id == application.id,
+        QueueAssignment.status.in_([QueueAssignmentStatus.PENDING, QueueAssignmentStatus.IN_PROGRESS])
+    ).all()
+    for assignment in active_assignments:
+        assignment.status = QueueAssignmentStatus.COMPLETED
+        assignment.completed_at = datetime.utcnow()
+        assignment.completed_by_user_id = current_user.id
+        assignment.actual_completion_time = datetime.utcnow()
 
     db.commit()
 
+    # Re-route application (creates citizen_document_pending queue assignment)
+    RoutingService.route_application(db, application.id)
+
     # Trigger notification
     try:
-        send_missing_documents_email.delay(application.id, missing_documents)
+        send_missing_documents_email.delay(application.id, request_data.missing_documents)
     except Exception:
         # Sync fallback
         from app.services.notification import NotificationService
-        NotificationService.send_missing_documents_email(db, application.id, missing_documents)
+        NotificationService.send_missing_documents_email(db, application.id, request_data.missing_documents)
 
     # Log action
     log = AuditLog(
@@ -474,7 +526,10 @@ async def request_more_documents(
         user_id=current_user.id,
         action="requested_documents",
         action_category="write",
-        details={"missing_documents": missing_documents},
+        details={
+            "missing_documents": request_data.missing_documents,
+            "deadline_days": request_data.deadline_days
+        },
         timestamp=datetime.utcnow()
     )
     db.add(log)

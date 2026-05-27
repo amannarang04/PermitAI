@@ -9,6 +9,7 @@ from app.models.queue_assignment import QueueAssignment, QueueHistory
 from app.models.user import User
 from app.models.application import Application
 from app.schemas.queue import QueueAssignmentResponse, ReassignRequest
+from app.schemas.application import ApplicationDetailResponse
 from app.constants.enums import QueueAssignmentStatus
 
 router = APIRouter(prefix="/api/queues", tags=["queues"])
@@ -46,23 +47,49 @@ async def get_queue_status(
         }
     return status_summary
 
-@router.get("/{queue_name}", response_model=List[QueueAssignmentResponse])
-async def get_queue_assignments(
-    queue_name: str,
-    status_filter: Optional[str] = QueueAssignmentStatus.PENDING,
+@router.get("/my-queue", response_model=List[QueueAssignmentResponse])
+async def get_my_queue(
+    queue_name: Optional[str] = None,
+    status_filter: Optional[str] = "pending",
+    skip: int = 0,
+    limit: int = 50,
     current_user: User = Depends(get_staff_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get all active assignments in a specific queue
+    Get all active assignments assigned to the logged-in staff member, with optional queue_name filter
     """
     query = db.query(QueueAssignment).filter(
-        QueueAssignment.queue_name == queue_name
+        QueueAssignment.assigned_to_user_id == current_user.id
     )
+    if queue_name:
+        query = query.filter(QueueAssignment.queue_name == queue_name)
     if status_filter:
-        query = query.filter(QueueAssignment.status == status_filter)
+        status_val = status_filter.value if hasattr(status_filter, "value") else status_filter
+        query = query.filter(QueueAssignment.status == str(status_val))
+        
+    return query.offset(skip).limit(limit).all()
+
+@router.get("/{application_id}/details", response_model=ApplicationDetailResponse)
+async def get_queue_application_details(
+    application_id: str,
+    current_user: User = Depends(get_staff_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get full application details for evaluation inside a queue workflow
+    """
+    application = db.query(Application).filter(
+        Application.application_id == application_id
+    ).first()
+
+    if not application:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found"
+        )
     
-    return query.all()
+    return application
 
 @router.post("/assignments/{assignment_id}/reassign")
 async def reassign_application(
@@ -130,3 +157,24 @@ async def reassign_application(
         "message": f"Successfully reassigned to {target_user.full_name or target_user.username}",
         "new_assignment_id": new_assignment.id
     }
+
+@router.get("/{queue_name}", response_model=List[QueueAssignmentResponse])
+async def get_queue_assignments(
+    queue_name: str,
+    status_filter: Optional[str] = "pending",
+    current_user: User = Depends(get_staff_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all active assignments in a specific queue
+    """
+    query = db.query(QueueAssignment).filter(
+        QueueAssignment.queue_name == queue_name
+    )
+    if status_filter:
+        status_val = status_filter.value if hasattr(status_filter, "value") else status_filter
+        query = query.filter(QueueAssignment.status == str(status_val))
+    
+    return query.all()
+
+

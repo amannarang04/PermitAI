@@ -64,7 +64,8 @@ def test_upload_and_process_application(client, db):
 
     # Approve
     res_approve = client.post(
-        f"/api/applications/{app_id_str}/approve?notes=Approved+Hebbal+residential+project", 
+        f"/api/applications/{app_id_str}/approve", 
+        json={"notes": "Approved Hebbal residential project", "conditions": ["Inspect site monthly"]},
         headers=off_headers
     )
     assert res_approve.status_code == 200
