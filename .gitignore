@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+.venv/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
+
+# Databases / local state
+*.db
+*.sqlite3
+
+# Local storage and environments
+.env
+permitai-backend/.env
+permitai-backend/permitai.db
+permitai-backend/test.db
+permitai-backend/local_storage/
+permitai-backend/.pytest_cache/
+.pytest_cache/
+local_storage/
