@@ -1,0 +1,374 @@
+/* Premium Dark-by-Default Cyber-Government Design System */
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  background-color: #030712;
+  color: #f3f4f6;
+
+  /* Harmonious Cyber Palette */
+  --bg-main: #030712;
+  --bg-card: rgba(17, 24, 39, 0.7);
+  --bg-card-hover: rgba(31, 41, 55, 0.85);
+  
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.4);
+  --primary-light: #818cf8;
+  
+  --secondary: #06b6d4;
+  --secondary-glow: rgba(6, 182, 212, 0.3);
+  
+  --accent: #f59e0b;
+  --accent-glow: rgba(245, 158, 11, 0.3);
+  
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.3);
+  
+  --success: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.3);
+
+  --text-muted: #9ca3af;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(79, 70, 229, 0.15);
+
+  --font-title: 'Outfit', 'Inter', sans-serif;
+}
+
+/* Light Theme Variables */
+.light-mode {
+  --bg-main: #f3f4f6;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-card-hover: rgba(249, 250, 251, 0.95);
+  
+  --primary: #4f46e5;
+  --primary-glow: rgba(79, 70, 229, 0.15);
+  --primary-light: #4338ca;
+  
+  --secondary: #0891b2;
+  --secondary-glow: rgba(8, 145, 178, 0.15);
+  
+  --accent: #d97706;
+  --accent-glow: rgba(217, 119, 6, 0.15);
+  
+  --danger: #dc2626;
+  --danger-glow: rgba(220, 38, 38, 0.15);
+  
+  --success: #059669;
+  --success-glow: rgba(5, 150, 105, 0.15);
+
+  --text-muted: #4b5563;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-glow: rgba(79, 70, 229, 0.08);
+  color: #111827;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Futuristic background grid and glowing blobs */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(var(--border-glow) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.7;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: -10%;
+  right: -10%;
+  width: 50vw;
+  height: 50vw;
+  background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -2;
+}
+
+.blob-2 {
+  position: fixed;
+  bottom: -10%;
+  left: -10%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, var(--secondary-glow) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-glow);
+}
+
+/* Premium Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s, border-color 0.3s;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--primary-light);
+  box-shadow: 0 12px 40px 0 rgba(79, 70, 229, 0.15);
+}
+
+/* Glowing Neon Elements */
+.neon-glow-primary {
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+.neon-glow-secondary {
+  box-shadow: 0 0 15px var(--secondary-glow);
+}
+
+/* Premium Input Fields */
+.premium-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+.light-mode .premium-input {
+  background: rgba(0, 0, 0, 0.02);
+  color: #111827;
+}
+
+.premium-input:focus {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Premium Buttons */
+.premium-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #312e81 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--primary-glow);
+}
+.premium-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+}
+
+.premium-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f3f4f6;
+  border: 1px solid var(--border-color);
+}
+.light-mode .premium-btn-secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: #111827;
+}
+.premium-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.premium-btn-danger {
+  background: linear-gradient(135deg, var(--danger) 0%, #7f1d1d 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--danger-glow);
+}
+.premium-btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+}
+
+.premium-btn-success {
+  background: linear-gradient(135deg, var(--success) 0%, #064e3b 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--success-glow);
+}
+.premium-btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Grid Layouts */
+.premium-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  backdrop-filter: blur(4px);
+}
+.status-received {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.status-processing {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.status-under_review {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+.status-approved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.status-rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.status-pending_docs {
+  background: rgba(236, 72, 153, 0.15);
+  color: #f472b6;
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+.status-flagged {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+}
+
+/* Unified Government Selector Theme colors mapping */
+.state-theme-karnataka {
+  --primary: #f97316; /* Saffron/Gold */
+  --primary-glow: rgba(249, 115, 22, 0.3);
+  --primary-light: #fb923c;
+  --secondary: #ef4444; /* Red accent */
+}
+.state-theme-maharashtra {
+  --primary: #e11d48; /* Saffron Maratha Crimson */
+  --primary-glow: rgba(225, 29, 72, 0.3);
+  --primary-light: #fb7185;
+  --secondary: #f59e0b;
+}
+.state-theme-delhi {
+  --primary: #0d9488; /* Teal */
+  --primary-glow: rgba(13, 148, 136, 0.3);
+  --primary-light: #2dd4bf;
+  --secondary: #2563eb;
+}
+.state-theme-tamilnadu {
+  --primary: #15803d; /* Tamil Temple Green */
+  --primary-glow: rgba(21, 128, 61, 0.3);
+  --primary-light: #4ade80;
+  --secondary: #eab308;
+}
+.state-theme-telangana {
+  --primary: #db2777; /* Telangana Pink/Magenta */
+  --primary-glow: rgba(219, 39, 119, 0.3);
+  --primary-light: #f472b6;
+  --secondary: #4f46e5;
+}

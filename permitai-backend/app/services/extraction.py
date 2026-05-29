@@ -207,13 +207,121 @@ class ExtractionService:
             # mock missing documents
             pass
 
+        # Try to parse actual text from PDF if available
+        pdf_text = ""
+        if file_type.lower() == "pdf" or filename.endswith(".pdf"):
+            try:
+                import pypdf
+                if os.path.exists(file_path):
+                    reader = pypdf.PdfReader(file_path)
+                    for page in reader.pages:
+                        t = page.extract_text()
+                        if t:
+                            pdf_text += t + "\n"
+            except Exception:
+                pass
+
+        # Heuristic extraction values
+        extracted_name = None
+        extracted_email = None
+        extracted_phone = None
+        extracted_address = None
+        extracted_cost = None
+        extracted_permit_type = None
+        extracted_desc = None
+        extracted_area = None
+
+        if pdf_text:
+            import re
+            
+            # Extract Email
+            email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', pdf_text)
+            if email_match:
+                extracted_email = email_match.group(0).strip()
+                
+            # Extract Phone
+            phone_match = re.search(r'(?:Phone|Mobile):\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if not phone_match:
+                phone_match = re.search(r'\/\s*(\+?[\d\s-]{8,20})', pdf_text)
+            if phone_match:
+                val = phone_match.group(1).strip()
+                val = re.split(r'\s{2,}', val)[0]
+                extracted_phone = val.split('\n')[0].strip()
+
+            # Extract Applicant/Full Name
+            name_match = re.search(r'Applicant Name:\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if not name_match:
+                name_match = re.search(r'Principal Representative\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if not name_match:
+                name_match = re.search(r'Organization Name\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if name_match:
+                extracted_name = name_match.group(1).strip()
+
+            # Extract Registered/Property Address
+            address_match = re.search(r'Registered Address\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if not address_match:
+                address_match = re.search(r'Property Address:\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if not address_match:
+                address_match = re.search(r'Address:\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if address_match:
+                extracted_address = address_match.group(1).strip()
+
+            # Extract Estimated Cost
+            cost_match = re.search(r'Estimated Cost:\s*([\d,.]+)', pdf_text, re.IGNORECASE)
+            if cost_match:
+                try:
+                    extracted_cost = float(cost_match.group(1).replace(",", ""))
+                except ValueError:
+                    pass
+
+            # Extract Permit Type
+            permit_match = re.search(r'Permit Type:\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if permit_match:
+                p_type = permit_match.group(1).strip()
+                if "electrical" in p_type.lower():
+                    extracted_permit_type = "Electrical"
+                elif "plumbing" in p_type.lower():
+                    extracted_permit_type = "Plumbing"
+                elif "building" in p_type.lower():
+                    extracted_permit_type = "Building"
+            else:
+                if "electrical" in pdf_text.lower():
+                    extracted_permit_type = "Electrical"
+                elif "plumbing" in pdf_text.lower():
+                    extracted_permit_type = "Plumbing"
+                elif "building" in pdf_text.lower():
+                    extracted_permit_type = "Building"
+
+            # Extract Description
+            desc_match = re.search(r'System Nomenclature\s*\/[^\n]*\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if not desc_match:
+                desc_match = re.search(r'Description:\s*([^\n]+)', pdf_text, re.IGNORECASE)
+            if desc_match:
+                extracted_desc = desc_match.group(1).strip()
+                
+            # Extract Construction Area / Property Size
+            area_match = re.search(r'(?:Construction Area|Property Size):\s*([\d,.]+)', pdf_text, re.IGNORECASE)
+            if area_match:
+                try:
+                    extracted_area = float(area_match.group(1).replace(",", ""))
+                except ValueError:
+                    pass
+
+        # Apply heuristics if found
+        if extracted_cost is not None:
+            cost = extracted_cost
+        if extracted_area is not None:
+            area = extracted_area
+        if extracted_permit_type is not None:
+            permit_type = extracted_permit_type
+
         mock_data = {
             "applicant": {
-                "full_name": "Rajesh Kumar",
-                "email": "rajesh.kumar@example.com",
-                "phone": "+91-9876543210",
+                "full_name": extracted_name or "Rajesh Kumar",
+                "email": extracted_email or "rajesh.kumar@example.com",
+                "phone": extracted_phone or "+91-9876543210",
                 "address": {
-                    "line1": "#42, 3rd Cross, Indiranagar",
+                    "line1": extracted_address or "#42, 3rd Cross, Indiranagar",
                     "line2": "Stage 2",
                     "city": "Bangalore",
                     "state": "Karnataka",
@@ -224,7 +332,7 @@ class ExtractionService:
             },
             "property": {
                 "address": {
-                    "line1": "Plot 105, Hebbal Industrial Area",
+                    "line1": extracted_address or "Plot 105, Hebbal Industrial Area",
                     "line2": "Hebbal",
                     "city": "Bangalore",
                     "state": "Karnataka",
@@ -240,7 +348,7 @@ class ExtractionService:
             },
             "project": {
                 "permit_type": permit_type,
-                "description": f"Proposed construction of {permit_type.lower()} layout",
+                "description": extracted_desc or f"Proposed construction of {permit_type.lower()} layout",
                 "scope": "New Construction",
                 "estimated_cost": {
                     "value": cost,

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
+from app.schemas.application import ApplicationResponse
 
 class QueueAssignmentResponse(BaseModel):
     id: int
@@ -14,6 +15,7 @@ class QueueAssignmentResponse(BaseModel):
     completed_by_user_id: Optional[int]
     estimated_completion_time: Optional[datetime]
     actual_completion_time: Optional[datetime]
+    application: Optional[ApplicationResponse] = None
 
     model_config = ConfigDict(from_attributes=True)
 
