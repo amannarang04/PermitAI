@@ -9,7 +9,7 @@ import { getSelectedState, saveSelectedState } from "./stateConfig";
 import type { StateConfiguration } from "./stateConfig";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const App: React.FC = () => {
   const [selectedState, setSelectedState] = useState<StateConfiguration>(getSelectedState());
