@@ -113,10 +113,10 @@ export const OfficerPortal: React.FC<OfficerPortalProps> = ({ token, user, apiBa
   };
 
   return (
-    <div style={{ display: "flex", gap: "28px", maxWidth: "1200px", margin: "40px auto", padding: "0 24px" }} className="animate-fade-in">
+    <div className="workspace-container animate-fade-in">
       
       {/* LEFT: Assignment List Queue */}
-      <div className="glass-card" style={{ flex: 1.1, minWidth: "350px", display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div className="workspace-sidebar glass-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.3rem" }}>Department Review Queue</h3>
@@ -174,7 +174,7 @@ export const OfficerPortal: React.FC<OfficerPortalProps> = ({ token, user, apiBa
       </div>
 
       {/* RIGHT: Detailed Review Panel */}
-      <div style={{ flex: 1.9 }}>
+      <div className="workspace-content">
         {detailsLoading ? (
           <div className="glass-card" style={{ display: "flex", justifyContent: "center", padding: "60px" }}>
             <p>Loading application compliance data...</p>

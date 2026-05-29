@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
 /* Premium Dark-by-Default Cyber-Government Design System */
 
 :root {
@@ -372,3 +374,134 @@ h1, h2, h3, h4, h5, h6 {
   --primary-light: #f472b6;
   --secondary: #4f46e5;
 }
+
+/* Responsive Portal Layout System */
+.portal-container {
+  display: flex;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.portal-sidebar {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.portal-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Workspace Layout System (Officer Console) */
+.workspace-container {
+  display: flex;
+  gap: 28px;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+.workspace-sidebar {
+  flex: 1.1;
+  min-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.workspace-content {
+  flex: 1.9;
+  min-width: 0;
+}
+
+/* Responsive Breakpoints & Viewport Overrides */
+@media (max-width: 1024px) {
+  .portal-container,
+  .workspace-container {
+    gap: 20px;
+    padding: 0 16px;
+  }
+  
+  .workspace-sidebar {
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .portal-container,
+  .workspace-container {
+    flex-direction: column;
+    margin: 20px auto;
+    gap: 24px;
+  }
+
+  .portal-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .portal-sidebar .premium-btn {
+    flex: 1;
+    min-width: 130px;
+  }
+
+  .workspace-sidebar {
+    min-width: 100%;
+  }
+
+  /* Responsive header overrides */
+  nav {
+    padding: 12px 16px !important;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  /* Hide text labels on mobile for space */
+  .desktop-label {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-sidebar .premium-btn {
+    min-width: 100%;
+  }
+  
+  .premium-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .workspace-sidebar {
+    min-width: 100%;
+  }
+}
+
+/* Responsive Auth Container */
+.auth-container {
+  display: flex;
+  gap: 40px;
+  max-width: 1000px;
+  margin: 60px auto;
+  padding: 0 24px;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    gap: 24px;
+    margin: 30px auto;
+    padding: 0 16px;
+  }
+}
+
+

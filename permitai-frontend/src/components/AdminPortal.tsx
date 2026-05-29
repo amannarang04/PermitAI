@@ -94,10 +94,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ token, apiBaseUrl }) =
   };
 
   return (
-    <div style={{ display: "flex", gap: "28px", maxWidth: "1200px", margin: "40px auto", padding: "0 24px" }} className="animate-fade-in">
+    <div className="portal-container animate-fade-in">
       
       {/* Side Menu Tab Navigator */}
-      <div style={{ width: "240px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="portal-sidebar">
         <button
           onClick={() => setActiveTab("metrics")}
           className="premium-btn"
@@ -143,7 +143,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ token, apiBaseUrl }) =
       </div>
 
       {/* Main Panel Content */}
-      <div style={{ flex: 1 }}>
+      <div className="portal-content">
         
         {activeTab === "metrics" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>

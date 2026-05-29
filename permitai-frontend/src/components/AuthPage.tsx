@@ -103,15 +103,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLoginSuccess, apiBaseUrl }
   };
 
   return (
-    <div style={{
-      display: "flex",
-      gap: "40px",
-      maxWidth: "1000px",
-      margin: "60px auto",
-      padding: "0 24px",
-      flexWrap: "wrap",
-      alignItems: "stretch"
-    }} className="animate-fade-in">
+    <div className="auth-container animate-fade-in">
 
       {/* Form Card */}
       <div className="glass-card" style={{ flex: 1.2, minWidth: "320px", display: "flex", flexDirection: "column" }}>

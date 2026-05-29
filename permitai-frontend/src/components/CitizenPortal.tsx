@@ -140,10 +140,10 @@ export const CitizenPortal: React.FC<CitizenPortalProps> = ({ token, user, apiBa
   };
 
   return (
-    <div style={{ display: "flex", gap: "32px", maxWidth: "1200px", margin: "40px auto", padding: "0 24px" }} className="animate-fade-in">
+    <div className="portal-container animate-fade-in">
       
       {/* Side Menu Tab Navigator */}
-      <div style={{ width: "240px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="portal-sidebar">
         <button
           onClick={() => setActiveTab("dashboard")}
           className="premium-btn"
@@ -199,7 +199,7 @@ export const CitizenPortal: React.FC<CitizenPortalProps> = ({ token, user, apiBa
       </div>
 
       {/* Main Panel Content */}
-      <div style={{ flex: 1 }}>
+      <div className="portal-content">
         
         {activeTab === "dashboard" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>

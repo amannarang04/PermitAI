@@ -28,18 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
-    <nav style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "16px 32px",
-      borderBottom: "1px solid var(--border-color)",
-      background: "rgba(17, 24, 39, 0.6)",
-      backdropFilter: "blur(12px)",
-      position: "sticky",
-      top: 0,
-      zIndex: 100
-    }}>
+    <nav className="navbar-container" style={{ position: "sticky", top: 0, zIndex: 100 }}>
       {/* Brand Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => window.location.hash = "#"}>
         <div style={{
@@ -78,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             style={{ padding: "8px 16px", fontSize: "0.85rem", gap: "6px" }}
           >
             <Globe size={16} color="var(--primary-light)" />
-            <span>Govt. of {selectedState.name}</span>
+            <span><span className="desktop-label">Govt. of </span>{selectedState.name}</span>
           </button>
           
           {dropdownOpen && (
@@ -198,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}>
                 {user.role === "admin" ? <Shield size={16} /> : <User size={16} />}
               </div>
-              <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", flexDirection: "column" }} className="desktop-label">
                 <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>{user.username}</span>
                 <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase" }}>{user.role}</span>
               </div>
